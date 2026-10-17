@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ghost OS</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    height: 100vh; height: 100dvh; overflow: hidden;
+    background: #000; color: #0f0;
+    font-family: 'Menlo', 'Consolas', 'Courier New', monospace;
+    font-size: 13px;
+    user-select: none;
+  }
+  button, input, textarea { font-family: inherit; }
+
+  /* ---------- MATRIX CANVAS ---------- */
+  #matrix-canvas {
+    position: fixed; inset: 0; z-index: 0; display: none;
+  }
+
+  /* ---------- BOOT ---------- */
+  #boot {
+    position: fixed; inset: 0; z-index: 100; padding: 40px;
+    overflow: hidden; font-size: 13px; line-height: 1.6;
+    background: #000;
+  }
+  #boot .line { white-space: pre-wrap; opacity: 0; animation: fadeIn .15s forwards; }
+  @keyframes fadeIn { to { opacity: 1; } }
+  .dim { color: #0a0; }
+  .ok { color: #0f0; text-shadow: 0 0 4px #0f0; }
+  .warn { color: #fa0; }
+  .err { color: #f33; }
+  .info { color: #0cc; }
+  .big { font-size: 15px; font-weight: bold; }
+
+  /* ---------- LOGIN ---------- */
+  #login {
+    position: fixed; inset: 0; z-index: 90; display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    background: #000; text-align: center;
+  }
+  #login pre {
+    color: #0f0; font-size: 11px; line-height: 1.1;
+    text-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @media (min-width: 700px) { #login pre { font-size: 14px; } }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+  #login .login-line {
+    margin-top: 40px; font-size: 15px;
+    animation: blink 1.2s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ---------- DESKTOP ---------- */
+  #desktop { position: fixed; inset: 0; z-index: 5; display: none; }
+
+  #desktop-icons {
+    position: absolute; top: 24px; left: 24px;
+    display: flex; flex-direction: column; gap: 20px; z-index: 1;
+  }
+  .d-icon {
+    width: 84px; text-align: center; cursor: pointer;
+    padding: 8px 4px; border-radius: 4px; transition: background .15s;
+  }
+  .d-icon:hover { background: rgba(0,255,0,0.08); }
+  .d-icon .d-emoji { font-size: 30px; display: block; }
+  .d-icon .d-label {
+    font-size: 11px; color: #0f0; margin-top: 6px;
+    text-shadow: 0 0 4px #0f0;
+  }
+
+  /* ---------- WINDOWS ---------- */
+  #windows-layer { position: absolute; inset: 0 0 40px 0; pointer-events: none; }
+  #windows-layer > * { pointer-events: auto; }
+
+  .window {
+    position: absolute;
+    background: #050a05;
+    border: 1px solid #0a4a0a;
+    box-shadow: 0 0 30px rgba(0,255,0,0.15), 0 10px 40px rgba(0,0,0,0.8);
+    border-radius: 4px;
+    display: flex; flex-direction: column;
+    min-width: 300px; min-height: 200px;
+    animation: winOpen .2s ease-out;
+  }
+  @keyframes winOpen {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .win-titlebar {
+    height: 32px;
+    background: linear-gradient(180deg, #0a2a0a, #051005);
+    border-bottom: 1px solid #0a4a0a;
+    display: flex; align-items: center; padding: 0 8px;
+    cursor: grab; flex-shrink: 0;
+  }
+  .win-titlebar:active { cursor: grabbing; }
+  .win-title {
+    flex: 1; font-size: 12px; color: #0f0;
+    text-shadow: 0 0 5px #0f0; padding-left: 6px;
+  }
+  .win-icon { color: #0f0; font-size: 14px; }
+  .win-controls { display: flex; gap: 4px; }
+  .win-btn {
+    width: 24px; height: 24px; background: transparent;
+    border: 1px solid #0a4a0a; color: #0f0;
+    cursor: pointer; border-radius: 2px; font-size: 11px;
+    transition: all .15s;
+  }
+  .win-btn:hover { background: #0a4a0a; }
+  .win-btn.close:hover { background: #3a0a0a; border-color: #a00; color: #f55; }
+  .win-body {
+    flex: 1; overflow: hidden; display: flex; flex-direction: column;
+    position: relative;
+  }
+
+  /* ---------- TERMINAL APP ---------- */
+  .term-output {
+    flex: 1; overflow-y: auto; padding: 8px 12px;
+    font-size: 13px; line-height: 1.5;
+  }
+  .term-output::-webkit-scrollbar { width: 6px; }
+  .term-output::-webkit-scrollbar-track { background: #000; }
+  .term-output::-webkit-scrollbar-thumb { background: #0a4a0a; }
+  .term-line { white-space: pre-wrap; word-break: break-word; min-height: 1.5em; }
+  .term-line.cmd { color: #0f0; }
+  .term-line .prompt { color: #0f0; font-weight: bold; }
+  .term-inputline {
+    display: flex; align-items: center; padding: 6px 12px;
+    border-top: 1px solid #0a4a0a; background: #020502;
+  }
+  .term-prompt { color: #0f0; margin-right: 8px; white-space: nowrap; }
+  .term-input {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: #0f0; font-size: 13px; caret-color: #0f0;
+  }
+
+  /* ---------- TASKBAR ---------- */
+  #taskbar {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 40px;
+    background: linear-gradient(180deg, #0a2a0a, #000);
+    border-top: 1px solid #0a4a0a;
+    display: flex; align-items: center; padding: 0 8px; gap: 6px;
+    z-index: 1000;
+  }
+  .tb-start {
+    height: 30px; padding: 0 14px;
+    background: #0a2a0a; border: 1px solid #0f0;
+    color: #0f0; cursor: pointer; font-weight: bold;
+    border-radius: 3px; font-size: 13px;
+    text-shadow: 0 0 6px #0f0; transition: all .15s;
+  }
+  .tb-start:hover { background: #0f4a0f; box-shadow: 0 0 12px rgba(0,255,0,0.5); }
+  .tb-windows { flex: 1; display: flex; gap: 4px; overflow-x: auto; }
+  .tb-win {
+    height: 30px; padding: 0 12px;
+    background: #051005; border: 1px solid #0a4a0a;
+    color: #0a0; cursor: pointer; border-radius: 2px; font-size: 12px;
+    transition: all .15s;
+  }
+  .tb-win.active { border-color: #0f0; color: #0f0; text-shadow: 0 0 4px #0f0; }
+  .tb-win:hover { background: #0a2a0a; }
+  .tb-clock { color: #0f0; font-size: 12px; padding: 0 10px; font-weight: bold; }
+
+  /* ---------- START MENU ---------- */
+  #start-menu {
+    position: absolute; bottom: 44px; left: 8px;
+    width: 260px; background: #051005;
+    border: 1px solid #0f0; border-radius: 4px;
+    box-shadow: 0 0 25px rgba(0,255,0,0.35);
+    display: none; flex-direction: column;
+    z-index: 1001; padding: 6px;
+  }
+  #start-menu.open { display: flex; }
+  .sm-item {
+    padding: 10px 14px; cursor: pointer; color: #0f0;
+    border-radius: 3px; display: flex; align-items: center; gap: 12px;
+    font-size: 13px;
+  }
+  .sm-item:hover { background: #0a2a0a; }
+  .sm-item .sm-icon { font-size: 18px; width: 24px; text-align: center; }
+  .sm-divider { height: 1px; background: #0a4a0a; margin: 4px 0; }
+
+  /* ---------- APP-SPECIFIC ---------- */
+  .app-content { flex: 1; overflow: auto; padding: 12px; }
+  .app-content::-webkit-scrollbar { width: 6px; }
+  .app-content::-webkit-scrollbar-thumb { background: #0a4a0a; }
+
+  .file-row {
+    display: flex; align-items: center; padding: 8px 10px;
+    cursor: pointer; border-radius: 3px; gap: 10px;
+  }
+  .file-row:hover { background: #0a2a0a; }
+  .file-row .f-icon { font-size: 16px; }
+  .file-row .f-name { flex: 1; color: #0f0; }
+  .file-row .f-size { color: #0a0; font-size: 11px; }
+  .file-path-bar {
+    padding: 8px 12px; border-bottom: 1px solid #0a4a0a;
+    font-size: 12px; color: #0a0; display: flex; align-items: center; gap: 8px;
+  }
+  .btn {
+    background: #0a2a0a; border: 1px solid #0f0; color: #0f0;
+    padding: 8px 16px; border-radius: 3px; cursor: pointer;
+    transition: all .15s; font-size: 12px;
+  }
+  .btn:hover { background: #0f4a0f; box-shadow: 0 0 10px rgba(0,255,0,0.4); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .settings-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px; border-bottom: 1px solid #0a2a0a;
+  }
+  .settings-row label { color: #0f0; font-size: 13px; }
+  .switch {
+    position: relative; width: 48px; height: 24px;
+    background: #0a2a0a; border: 1px solid #0a4a0a;
+    border-radius: 12px; cursor: pointer; transition: all .2s;
+  }
+  .switch::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 18px; height: 18px; background: #0a0;
+    border-radius: 50%; transition: all .2s;
+  }
+  .switch.on { background: #0f4a0f; border-color: #0f0; }
+  .switch.on::after { left: 26px; background: #0f0; box-shadow: 0 0 8px #0f0; }
+
+  .about-content { padding: 20px; text-align: center; }
+  .about-content pre {
+    color: #0f0; font-size: 9px; line-height: 1.1;
+    text-shadow: 0 0 8px #0f0; margin-bottom: 20px;
+    display: inline-block;
+  }
+  .about-content .about-info { text-align: left; max-width: 400px; margin: 0 auto; }
+  .about-content .about-info div { padding: 6px 0; border-bottom: 1px solid #0a2a0a; }
+  .about-content .about-info .k { color: #0a0; }
+  .about-content .about-info .v { color: #0f0; float: right; }
+
+  .textarea {
+    width: 100%; height: 100%; background: #020502;
+    border: none; outline: none; color: #0f0;
+    resize: none; padding: 12px; font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .scan-log {
+    flex: 1; overflow-y: auto; padding: 12px;
+    font-size: 12px; line-height: 1.6;
+  }
+  .progress-line {
+    padding: 8px 12px; color: #0a0; font-size: 12px;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="matrix-canvas"></canvas>
+
+<!-- BOOT -->
+<div id="boot"></div>
+
+<!-- LOGIN -->
+<div id="login">
+<pre>
+ ██████╗ ██╗  ██╗ ██████╗ ███████╗████████╗    ██████╗ ███████╗
+██╔════╝ ██║  ██║██╔═══██╗██╔════╝╚══██╔══╝   ██╔═══██╗██╔════╝
+██║  ███╗███████║██║   ██║███████╗   ██║      ██║   ██║███████╗
+██║   ██║██╔══██║██║   ██║╚════██║   ██║      ██║   ██║╚════██║
+╚██████╔╝██║  ██║╚██████╔╝███████║   ██║      ╚██████╔╝███████║
+ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝       ╚═════╝ ╚══════╝
+</pre>
+<div class="login-line">[ press ENTER to log in as root ]</div>
+</div>
+
+<!-- DESKTOP -->
+<div id="desktop">
+  <div id="desktop-icons"></div>
+  <div id="windows-layer"></div>
+
+  <div id="start-menu"></div>
+
+  <div id="taskbar">
+    <button class="tb-start" id="start-btn">👻 GHOST</button>
+    <div class="tb-windows" id="tb-windows"></div>
+    <div class="tb-clock" id="tb-clock">--:--</div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   GHOST OS — core
+   ========================================================= */
+
+/* ---------- VIRTUAL FILESYSTEM ---------- */
+const FS = {
+  type: 'dir',
+  children: {
+    home: { type: 'dir', children: {
+      ghost: { type: 'dir', children: {
+        'readme.txt': { type: 'file', content:
+`╔═══════════════════════════════════╗
+║       Welcome to GHOST OS         ║
+╚═══════════════════════════════════╝
+
+You are logged in as: root
+Hostname: ghost
+Kernel: ghost-6.6.6
+
+Take a look around. Try the Scanner.
+Or open a terminal and type: help` },
+        'passwords.txt': { type: 'file', content: 'Nice try, kid. 🔒' },
+        'exploit.py': { type: 'file', content:
+`#!/usr/bin/env python3
+import os, sys
+
+def pwn(target):
+    print(f"[+] breaching {target}")
+    print("[+] done. you're in. 😎")
+
+if __name__ == '__main__':
+    pwn(sys.argv[1] if len(sys.argv) > 1 else 'localhost')` },
+        'notes.md': { type: 'file', content:
+`# TODO
+- [x] build ghost os
+- [x] make it look cool
+- [x] add window manager
+- [ ] take over the world
+- [ ] sleep` }
+      }}
+    }},
+    etc: { type: 'dir', children: {
+      'hosts': { type: 'file', content: '127.0.0.1\tlocalhost\n::1\tlocalhost\n10.13.37.1\tghost-node' },
+      'passwd': { type: 'file', content: 'root:x:0:0:root:/home/ghost:/bin/ghostsh' },
+      'motd': { type: 'file', content: 'The ghost in the shell.' }
+    }},
+    bin: { type: 'dir', children: {
+      'ghostsh': { type: 'file', content: '<binary>' },
+      'nmap': { type: 'file', content: '<binary>' },
+      'exploit': { type: 'file', content: '<binary>' }
+    }},
+    var: { type: 'dir', children: {
+      log: { type: 'dir', children: {
+        'auth.log': { type: 'file', content: '[2024] session opened for root' },
+        'ghost.log': { type: 'file', content: '[info] ghost-os started' }
+      }}
+    }},
+    tmp: { type: 'dir', children: {} }
+  }
+};
+
+function resolvePath(input, cwd) {
+  if (!input) return cwd;
+  let path = input.startsWith('/') ? input : cwd + '/' + input;
+  const parts = path.split('/').filter(p => p && p !== '.');
+  const stack = [];
+  for (const p of parts) {
+    if (p === '..') stack.pop();
+    else stack.push(p);
+  }
+  return '/' + stack.join('/');
+}
+function getNode(path) {
+  if (path === '/' || path === '') return FS;
+  const parts = path.split('/').filter(Boolean);
+  let node = FS;
+  for (const p of parts) {
+    if (!node.children || !node.children[p]) return null;
+    node = node.children[p];
+  }
+  return node;
+}
+function listDir(path) {
+  const node = getNode(path);
+  if (!node || node.type !== 'dir') return null;
+  return Object.keys(node.children).sort().map(name => ({
+    name,
+    type: node.children[name].type,
+  }));
+}
+
+/* ---------- GLOBAL STATE ---------- */
+let matrixRunning = false;
+const openApps = {}; // appId -> window element
+let windowZIndex = 100;
+const APP_TITLES = {};
+let currentTerminal = null;
+
+/* ---------- MATRIX ---------- */
+const matrixCanvas = document.getElementById('matrix-canvas');
+const matrixCtx = matrixCanvas.getContext('2d');
+let matrixCols, matrixDrops;
+const matrixChars = 'アァカサタナハマヤラワ01ABCDEF0123456789<>/\\|{}[]$#@';
+
+function resizeMatrix() {
+  matrixCanvas.width = window.innerWidth;
+  matrixCanvas.height = window.innerHeight;
+  matrixCols = Math.floor(matrixCanvas.width / 16);
+  matrixDrops = new Array(matrixCols).fill(1);
+}
+resizeMatrix();
+window.addEventListener('resize', resizeMatrix);
+
+function drawMatrix() {
+  if (!matrixRunning) return;
+  matrixCtx.fillStyle = 'rgba(0,0,0,0.06)';
+  matrixCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+  matrixCtx.font = '16px monospace';
+  for (let i = 0; i < matrixDrops.length; i++) {
+    const ch = matrixChars[Math.floor(Math.random() * matrixChars.length)];
+    matrixCtx.fillStyle = Math.random() > 0.96 ? '#aaffaa' : '#0f0';
+    matrixCtx.fillText(ch, i * 16, matrixDrops[i] * 16);
+    if (matrixDrops[i] * 16 > matrixCanvas.height && Math.random() > 0.975) matrixDrops[i] = 0;
+    matrixDrops[i]++;
+  }
+  requestAnimationFrame(drawMatrix);
+}
+function setMatrix(on) {
+  matrixRunning = on;
+  matrixCanvas.style.display = on ? 'block' : 'none';
+  if (on) {
+    resizeMatrix();
+    drawMatrix();
+  }
+}
+
+/* ---------- UTILS ---------- */
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function fakeIP() {
+  return Array.from({length:4}, () => Math.floor(Math.random()*256)).join('.');
+}
+
+/* ---------- WINDOW MANAGER ---------- */
+function createWindow(opts) {
+  const { title, icon = '▪', appId, width = 640, height = 420, content } = opts;
+  const win = document.createElement('div');
+  win.className = 'window';
+  win.style.width = width + 'px';
+  win.style.height = height + 'px';
+  const maxLeft = Math.max(40, window.innerWidth - width - 40);
+  const maxTop = Math.max(20, window.innerHeight - height - 80);
+  win.style.left = Math.min(maxLeft, Math.max(40, window.innerWidth/2 - width/2 + (Math.random()*60-30))) + 'px';
+  win.style.top = Math.min(maxTop, Math.max(20, window.innerHeight/2 - height/2 + (Math.random()*40-20))) + 'px';
+  win.style.zIndex = ++windowZIndex;
+  if (appId) { win.dataset.appId = appId; APP_TITLES[appId] = title; }
+
+  win.innerHTML = `
+    <div class="win-titlebar">
+      <span class="win-icon">${icon}</span>
+      <span class="win-title">${esc(title)}</span>
+      <div class="win-controls">
+        <button class="win-btn minimize" title="minimize">─</button>
+        <button class="win-btn maximize" title="maximize">□</button>
+        <button class="win-btn close" title="close">✕</button>
+      </div>
+    </div>
+    <div class="win-body"></div>
+  `;
+  const body = win.querySelector('.win-body');
+  if (typeof content === 'string') body.innerHTML = content;
+  else if (content instanceof HTMLElement) body.appendChild(content);
+
+  // drag
+  const titlebar = win.querySelector('.win-titlebar');
+  let dragStart = null;
+  titlebar.addEventListener('mousedown', e => {
+    if (e.target.closest('.win-btn')) return;
+    dragStart = { x: e.clientX, y: e.clientY, left: win.offsetLeft, top: win.offsetTop };
+    win.style.zIndex = ++windowZIndex;
+    updateTaskbarActive(appId);
+  });
+  const onMove = e => {
+    if (!dragStart) return;
+    let nx = dragStart.left + e.clientX - dragStart.x;
+    let ny = dragStart.top + e.clientY - dragStart.y;
+    ny = Math.max(0, Math.min(ny, window.innerHeight - 60));
+    win.style.left = nx + 'px';
+    win.style.top = ny + 'px';
+  };
+  const onUp = () => { dragStart = null; };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+
+  // controls
+  win.querySelector('.close').onclick = () => {
+    if (appId) delete openApps[appId];
+    win.remove();
+    updateTaskbar();
+  };
+  win.querySelector('.minimize').onclick = () => {
+    win.style.display = 'none';
+    if (appId) delete openApps[appId];
+    updateTaskbar();
+  };
+  win.querySelector('.maximize').onclick = () => {
+    if (win.dataset.maximized === '1') {
+      win.style.width = width + 'px';
+      win.style.height = height + 'px';
+      win.style.left = win.dataset.oldLeft;
+      win.style.top = win.dataset.oldTop;
+      win.dataset.maximized = '0';
+    } else {
+      win.dataset.oldLeft = win.style.left;
+      win.dataset.oldTop = win.style.top;
+      win.style.left = '10px';
+      win.style.top = '10px';
+      win.style.width = 'calc(100vw - 20px)';
+      win.style.height = 'calc(100vh - 70px)';
+      win.dataset.maximized = '1';
+    }
+  };
+  win.addEventListener('mousedown', () => {
+    win.style.zIndex = ++windowZIndex;
+    if (appId) updateTaskbarActive(appId);
+  });
+
+  document.getElementById('windows-layer').appendChild(win);
+  updateTaskbar();
+  return win;
+}
+
+/* ---------- TASKBAR ---------- */
+function updateTaskbar() {
+  const tb = document.getElementById('tb-windows');
+  tb.innerHTML = '';
+  Object.keys(openApps).forEach(id => {
+    const w = openApps[id];
+    if (!w) return;
+    const btn = document.createElement('button');
+    btn.className = 'tb-win';
+    btn.textContent = APP_TITLES[id] || id;
+    btn.onclick = () => {
+      w.style.display = 'flex';
+      w.style.zIndex = ++windowZIndex;
+      updateTaskbarActive(id);
+    };
+    tb.appendChild(btn);
+  });
+  // mark active
+  const top = Object.keys(openApps).reduce((acc, id) => {
+    const w = openApps[id];
+    if (!w || w.style.display === 'none') return acc;
+    if (!acc || parseInt(w.style.zIndex) > parseInt(acc.z)) return { id, z: w.style.zIndex };
+    return acc;
+  }, null);
+  if (top) updateTaskbarActive(top.id);
+}
+function updateTaskbarActive(id) {
+  document.querySelectorAll('.tb-win').forEach((btn, i) => {
+    btn.classList.toggle('active', Object.keys(openApps)[i] === id);
+  });
+}
+setInterval(() => {
+  const d = new Date();
+  document.getElementById('tb-clock').textContent =
+    String(d.getHours()).padStart(2,'0') + ':' +
+    String(d.getMinutes()).padStart(2,'0');
+}, 1000);
+
+/* ---------- START MENU ---------- */
+function openStartMenu() {
+  const menu = document.getElementById('start-menu');
+  const apps = Object.keys(APPS);
+  menu.innerHTML = apps.map(id => `
+    <div class="sm-item" data-app="${id}">
+      <span class="sm-icon">${APPS[id].icon}</span>
+      <span>${APPS[id].name}</span>
+    </div>
+  `).join('') + `
+    <div class="sm-divider"></div>
+    <div class="sm-item" data-app="__logout">
+      <span class="sm-icon">⏻</span>
+      <span>Log out</span>
+    </div>
+  `;
+  menu.classList.toggle('open');
+  menu.querySelectorAll('.sm-item').forEach(item => {
+    item.onclick = () => {
+      const id = item.dataset.app;
+      menu.classList.remove('open');
+      if (id === '__logout') { location.reload(); return; }
+      openApp(id);
+    };
+  });
+}
+
+/* ---------- APP: TERMINAL ---------- */
+function openTerminal() {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:flex;flex-direction:column;flex:1;overflow:hidden;';
+  wrap.innerHTML = `
+    <div class="term-output"></div>
+    <div class="term-inputline">
+      <span class="term-prompt"></span>
+      <input class="term-input" autocomplete="off" spellcheck="false" autofocus>
+    </div>
+  `;
+  const out = wrap.querySelector('.term-output');
+  const inputEl = wrap.querySelector('.term-input');
+  const promptEl = wrap.querySelector('.term-prompt');
+
+  let cwd = '/home/ghost';
+  let history = [];
+  let historyIdx = -1;
+  let busy = false;
+
+  function updatePrompt() {
+    const short = cwd.replace('/home/ghost', '~');
+    promptEl.textContent = `root@ghost:${short}#`;
+  }
+  function print(text, cls = '') {
+    const d = document.createElement('div');
+    d.className = 'term-line ' + cls;
+    d.innerHTML = text;
+    out.appendChild(d);
+    out.scrollTop = out.scrollHeight;
+    return d;
+  }
+  function printRaw(text, cls = '') {
+    const d = document.createElement('div');
+    d.className = 'term-line ' + cls;
+    d.textContent = text;
+    out.appendChild(d);
+    out.scrollTop = out.scrollHeight;
+    return d;
+  }
+  async function progressBar(label, speed = 40) {
+    const W = 22;
+    const d = printRaw(`${label} [${'░'.repeat(W)}]   0%`, 'dim');
+    for (let i = 0; i <= W; i++) {
+      await sleep(speed);
+      const pct = Math.floor(i / W * 100);
+      d.textContent = `${label} [${'█'.repeat(i)}${'░'.repeat(W - i)}] ${String(pct).padStart(3)}%`;
+      out.scrollTop = out.scrollHeight;
+    }
+  }
+
+  const CMDS = {
+    async help() {
+      print('Available commands:', 'info');
+      print('  help, whoami, pwd, ls, cd, cat, echo, touch, mkdir, rm');
+      print('  hack <target>   — breach a target');
+      print('  scan            — network scan');
+      print('  trace <host>    — trace route');
+      print('  decrypt         — crack AES');
+      print('  ping <host>     — icmp packets');
+      print('  matrix on|off   — toggle rain');
+      print('  neofetch        — system info');
+      print('  open <app>      — launch app');
+      print('  apps            — list apps');
+      print('  date, uname, sudo, joke, coffee, clear, exit');
+    },
+    async whoami() { print('root', 'ok'); print('uid=0(root) gid=0(root) groups=0(root),1337(h4x)', 'dim'); },
+    async pwd() { print(cwd); },
+    async ls(args) {
+      const target = resolvePath(args[0] || '.', cwd);
+      const items = listDir(target);
+      if (!items) return print(`ls: ${args[0] || '.'}: not a directory`, 'err');
+      if (!items.length) return print('(empty)', 'dim');
+      items.forEach(it => {
+        const color = it.type === 'dir' ? '#0cc' : '#0f0';
+        print(`<span style="color:${color}">${esc(it.name)}${it.type==='dir'?'/':''}</span>`);
+      });
+    },
+    async cd(args) {
+      if (!args[0] || args[0] === '~') { cwd = '/home/ghost'; updatePrompt(); return; }
+      const target = resolvePath(args[0], cwd);
+      const node = getNode(target);
+      if (!node) return print(`cd: ${args[0]}: no such directory`, 'err');
+      if (node.type !== 'dir') return print(`cd: ${args[0]}: not a directory`, 'err');
+      cwd = target;
+      updatePrompt();
+    },
+    async cat(args) {
+      if (!args[0]) return print('usage: cat <file>', 'err');
+      const target = resolvePath(args[0], cwd);
+      const node = getNode(target);
+      if (!node) return print(`cat: ${args[0]}: no such file`, 'err');
+      if (node.type === 'dir') return print(`cat: ${args[0]}: is a directory`, 'err');
+      node.content.split('\n').forEach(l => printRaw(l));
+    },
+    async echo(args) { printRaw(args.join(' ')); },
+    async touch(args) {
+      if (!args[0]) return print('usage: touch <file>', 'err');
+      const parent = cwd;
+      const name = args[0].split('/').pop();
+      const node = getNode(parent);
+      if (!node) return;
+      if (node.children[name]) return;
+      node.children[name] = { type: 'file', content: '' };
+      print(`created ${name}`, 'dim');
+    },
+    async mkdir(args) {
+      if (!args[0]) return print('usage: mkdir <dir>', 'err');
+      const parent = getNode(cwd);
+      if (!parent) return;
+      if (parent.children[args[0]]) return print(`mkdir: ${args[0]}: already exists`, 'err');
+      parent.children[args[0]] = { type: 'dir', children: {} };
+      print(`created ${args[0]}/`, 'dim');
+    },
+    async rm(args) {
+      if (args.join(' ') === '-rf /') {
+        print('Executing rm -rf / ...', 'warn');
+        await sleep(500);
+        print('');
+        await sleep(700);
+        print('...just kidding 😈', 'ok');
+        print('Your files are safe. For now.', 'dim');
+        return;
+      }
+      if (!args[0]) return print('usage: rm <file>', 'err');
+      const parent = getNode(cwd);
+      if (!parent) return;
+      if (!parent.children[args[0]]) return print(`rm: ${args[0]}: not found`, 'err');
+      delete parent.children[args[0]];
+    },
+    async hack(args) {
+      const target = args[0] || ['nasa.gov','fbi.gov','mi6.gov.uk','area51.gov','skynet.com'][Math.floor(Math.random()*5)];
+      print(`[>] breaching ${esc(target)} ...`, 'info');
+      await sleep(300);
+      print(`[>] DNS: ${fakeIP()}`, 'dim');
+      await progressBar('[▸]');
+      print('');
+      print('╔══════════════════════════════╗', 'ok');
+      print('║       ACCESS GRANTED ✓       ║', 'ok');
+      print('╚══════════════════════════════╝', 'ok');
+      print(`root@${esc(target)}:~#`, 'dim');
+    },
+    async scan() {
+      print('[>] scanning 10.13.37.0/24 ...', 'info');
+      const n = 5 + Math.floor(Math.random()*5);
+      for (let i = 0; i < n; i++) {
+        await sleep(200);
+        const ip = `10.13.37.${Math.floor(Math.random()*254)+1}`;
+        const ports = ['22','80','443','3306','8080'].sort(() => Math.random()-0.5).slice(0,3);
+        printRaw(`  → ${ip}  [OPEN] ${ports.join(',')}`, 'dim');
+      }
+      print(`[✓] ${n} hosts found.`, 'ok');
+    },
+    async trace(args) {
+      const host = args[0] || '8.8.8.8';
+      print(`traceroute to ${esc(host)}`, 'info');
+      for (let i = 1; i <= 8; i++) {
+        await sleep(220);
+        printRaw(`  ${String(i).padStart(2)}  ${fakeIP().padEnd(16)}  ${(Math.random()*40+5).toFixed(1)} ms`, 'dim');
+      }
+      print('[✓] trace complete.', 'ok');
+    },
+    async decrypt() {
+      print('[>] loading secret.enc ...', 'info');
+      await sleep(300);
+      await progressBar('[▸]');
+      print('');
+      print('▸ "The cake is a lie. Flag: GH0ST_1N_TH3_SH3LL"', 'ok');
+    },
+    async ping(args) {
+      const host = args[0] || 'localhost';
+      print(`PING ${esc(host)} (${fakeIP()})`, 'info');
+      for (let i = 0; i < 4; i++) {
+        await sleep(500);
+        printRaw(`64 bytes from ${host}: icmp_seq=${i} ttl=64 time=${(Math.random()*10+2).toFixed(1)} ms`, 'dim');
+      }
+      print('4 packets, 0% loss', 'ok');
+    },
+    async matrix(args) {
+      if (args[0] === 'on') { setMatrix(true); print('matrix: ON', 'ok'); }
+      else if (args[0] === 'off') { setMatrix(false); print('matrix: OFF', 'dim'); }
+      else print('usage: matrix [on|off]', 'err');
+    },
+    async neofetch() {
+      const art = [
+        '   ▄████▄   ',
+        '  ██    ██  ',
+        '  ██ ▄▄ ██  ',
+        '  ██ ▀▀ ██  ',
+        '   ▀████▀   '
+      ];
+      const info = [
+        'root@ghost',
+        '─────────',
+        'OS: Ghost OS 6.6.6',
+        'Kernel: ghost-6.6.6',
+        'Shell: ghostsh',
+        'Uptime: 1337 hours',
+        'CPU: Ghost Xeon ×16',
+        'RAM: 16G / 16G',
+        'Hack-Level: MAXIMUM'
+      ];
+      const n = Math.max(art.length, info.length);
+      for (let i = 0; i < n; i++) {
+        printRaw((art[i] || '            ') + '  ' + (info[i] || ''), i === 0 ? 'ok' : 'dim');
+      }
+    },
+    async open(args) {
+      const id = (args[0] || '').toLowerCase();
+      if (!id) return print('usage: open <app>', 'err');
+      if (!APPS[id]) return print(`open: no such app: ${esc(id)}`, 'err');
+      openApp(id);
+      print(`launched ${APPS[id].name}`, 'ok');
+    },
+    async apps() {
+      print('Apps:', 'info');
+      Object.keys(APPS).forEach(id => print(`  ${id.padEnd(10)} — ${APPS[id].name}`));
+    },
+    async date() { print(new Date().toString()); },
+    async uname() { print('Ghost-OS 6.6.6 x86_64 GNU/Linux', 'ok'); },
+    async sudo() { print('Nice try 😏', 'warn'); print('[sudo] you are already root.', 'dim'); },
+    async joke() {
+      const jokes = [
+        'Why do hackers wear hoodies? Because they have nothing to hide. 🕶',
+        "There are 10 types of people: those who understand binary, and those who don't.",
+        'I would tell you a UDP joke, but you might not get it.',
+        'A SQL query walks into a bar, sees two tables, and asks: "May I JOIN you?"',
+      ];
+      print(jokes[Math.floor(Math.random()*jokes.length)], 'info');
+    },
+    async coffee() {
+      print('☕ brewing ...', 'warn');
+      await sleep(600);
+      printRaw('      ( (\n       ) )\n    ........\n    |      |]\n    \\      /\n     `----\'', 'dim');
+      print('Now hack the planet 🌍', 'ok');
+    },
+    async clear() { out.innerHTML = ''; },
+    async exit() { print('session closed.', 'err'); }
+  };
+  CMDS.cls = CMDS.clear;
+
+  async function execute(input) {
+    const line = document.createElement('div');
+    line.className = 'term-line cmd';
+    line.innerHTML = `<span class="prompt">${esc(promptEl.textContent)}</span> ${esc(input)}`;
+    out.appendChild(line);
+
+    const parts = input.trim().split(/\s+/);
+    const cmd = parts[0].toLowerCase();
+    const args = parts.slice(1);
+
+    if (CMDS[cmd]) {
+      try { await CMDS[cmd](args); } catch (e) { print('error: ' + e.message, 'err'); }
+    } else {
+      print(`ghostsh: ${esc(cmd)}: command not found`, 'err');
+      print('type "help"', 'dim');
+    }
+    print('');
+  }
+
+  inputEl.addEventListener('keydown', async e => {
+    if (e.key === 'Enter') {
+      if (busy) return;
+      const v = inputEl.value;
+      inputEl.value = '';
+      if (!v.trim()) return;
+      history.push(v); historyIdx = history.length;
+      busy = true;
+      await execute(v);
+      busy = false;
+      inputEl.focus();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (historyIdx > 0) { historyIdx--; inputEl.value = history[historyIdx] || ''; }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (historyIdx < history.length - 1) { historyIdx++; inputEl.value = history[historyIdx] || ''; }
+      else { historyIdx = history.length; inputEl.value = ''; }
+    }
+  });
+
+  // welcome
+  updatePrompt();
+  print(`Ghost OS · ghostsh v1.0`, 'ok');
+  print(`logged in as root @ ghost`, 'dim');
+  print('type "help" or "neofetch"', 'dim');
+  print('');
+
+  wrap.addEventListener('click', () => inputEl.focus());
+  setTimeout(() => inputEl.focus(), 50);
+
+  const win = createWindow({
+    title: 'Terminal', icon: '⌨', appId: 'terminal',
+    width: 720, height: 440, content: wrap
+  });
+  return win;
+}
+
+/* ---------- APP: FILES ---------- */
+function openFiles() {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:flex;flex-direction:column;flex:1;overflow:hidden;';
+  wrap.innerHTML = `
+    <div class="file-path-bar"><span class="path-text">/home/ghost</span></div>
+    <div class="app-content file-list"></div>
+  `;
+  let cwd = '/home/ghost';
+  const pathText = wrap.querySelector('.path-text');
+  const list = wrap.querySelector('.file-list');
+
+  function render() {
+    pathText.textContent = cwd;
+    const items = listDir(cwd) || [];
+    list.innerHTML = '';
+    if (cwd !== '/') {
+      const up = document.createElement('div');
+      up.className = 'file-row';
+      up.innerHTML = '<span class="f-icon">⬆</span><span class="f-name">..</span>';
+      up.onclick = () => { cwd = cwd.split('/').slice(0, -1).join('/') || '/'; render(); };
+      list.appendChild(up);
+    }
+    items.forEach(it => {
+      const row = document.createElement('div');
+      row.className = 'file-row';
+      const icon = it.type === 'dir' ? '📁' : '📄';
+      row.innerHTML = `<span class="f-icon">${icon}</span><span class="f-name">${esc(it.name)}</span>`;
+      row.onclick = () => {
+        const newPath = cwd === '/' ? '/' + it.name : cwd + '/' + it.name;
+        if (it.type === 'dir') { cwd = newPath; render(); }
+        else {
+          const node = getNode(newPath);
+          createWindow({
+            title: it.name, icon: '📄', width: 500, height: 380,
+            content: `<pre style="padding:14px;color:#0f0;font-size:12px;line-height:1.5;white-space:pre-wrap;">${esc(node.content)}</pre>`
+          });
+        }
+      };
+      list.appendChild(row);
+    });
+  }
+  render();
+
+  return createWindow({
+    title: 'Files', icon: '📁', appId: 'files',
+    width: 560, height: 420, content: wrap
+  });
+}
+
+/* ---------- APP: SCANNER ---------- */
+function openScanner() {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:flex;flex-direction:column;flex:1;overflow:hidden;';
+  wrap.innerHTML = `
+    <div style="padding:12px;border-bottom:1px solid #0a2a0a;display:flex;gap:8px;align-items:center;">
+      <input class="target-input" value="10.13.37.0/24" style="flex:1;background:#020502;border:1px solid #0a4a0a;color:#0f0;padding:8px;border-radius:3px;outline:none;">
+      <button class="btn scan-btn">Scan</button>
+    </div>
+    <div class="scan-log"></div>
+  `;
+  const log = wrap.querySelector('.scan-log');
+  const btn = wrap.querySelector('.scan-btn');
+  const input = wrap.querySelector('.target-input');
+
+  btn.onclick = async () => {
+    btn.disabled = true;
+    log.innerHTML = '';
+    const target = input.value;
+    const add = (t, c='dim') => {
+      const d = document.createElement('div');
+      d.className = 'term-line ' + c;
+      d.textContent = t;
+      log.appendChild(d);
+      log.scrollTop = log.scrollHeight;
+    };
+    add(`[>] scanning ${target}`, 'info');
+    const n = 6 + Math.floor(Math.random()*6);
+    for (let i = 0; i < n; i++) {
+      await sleep(250);
+      const ip = target.split('/')[0].split('.').slice(0,3).join('.') + '.' + (Math.floor(Math.random()*254)+1);
+      const ports = ['22','80','443','3306','8080','21','25'].sort(() => Math.random()-0.5).slice(0,3);
+      add(`  → ${ip}  [OPEN] ${ports.join(',')}`);
+    }
+    add(`[✓] done. ${n} hosts.`, 'ok');
+    btn.disabled = false;
+  };
+
+  return createWindow({
+    title: 'Network Scanner', icon: '📡', appId: 'scan',
+    width: 560, height: 400, content: wrap
+  });
+}
+
+/* ---------- APP: NOTES ---------- */
+function openNotes() {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:flex;flex-direction:column;flex:1;';
+  wrap.innerHTML = `<textarea class="textarea" placeholder="# your secret notes ..."></textarea>`;
+  const ta = wrap.querySelector('textarea');
+  ta.value = localStorage.getItem('ghost-notes') || '';
+  ta.addEventListener('input', () => {
+    localStorage.setItem('ghost-notes', ta.value);
+  });
+  return createWindow({
+    title: 'Notes', icon: '📝', appId: 'notes',
+    width: 500, height: 400, content: wrap
+  });
+}
+
+/* ---------- APP: SETTINGS ---------- */
+function openSettings() {
+  const wrap = document.createElement('div');
+  wrap.className = 'app-content';
+  wrap.innerHTML = `
+    <div class="settings-row">
+      <label>Matrix Rain</label>
+      <div class="switch ${matrixRunning?'on':''}" id="sw-matrix"></div>
+    </div>
+    <div class="settings-row">
+      <label>Reset Notes</label>
+      <button class="btn" id="btn-reset-notes">Reset</button>
+    </div>
+    <div class="settings-row">
+      <label>Log out / Reboot</label>
+      <button class="btn" id="btn-reboot">Reboot</button>
+    </div>
+  `;
+  wrap.querySelector('#sw-matrix').onclick = (e) => {
+    const on = !matrixRunning;
+    setMatrix(on);
+    e.currentTarget.classList.toggle('on', on);
+  };
+  wrap.querySelector('#btn-reset-notes').onclick = () => {
+    localStorage.removeItem('ghost-notes');
+    alert('Notes cleared.');
+  };
+  wrap.querySelector('#btn-reboot').onclick = () => location.reload();
+
+  return createWindow({
+    title: 'Settings', icon: '⚙', appId: 'settings',
+    width: 480, height: 320, content: wrap
+  });
+}
+
+/* ---------- APP: ABOUT ---------- */
+function openAbout() {
+  const wrap = document.createElement('div');
+  wrap.className = 'about-content';
+  wrap.innerHTML = `
+    <pre>
+ ██████╗ ██╗  ██╗ ██████╗ ███████╗████████╗
+██╔════╝ ██║  ██║██╔═══██╗██╔════╝╚══██╔══╝
+██║  ███╗███████║██║   ██║███████╗   ██║
+██║   ██║██╔══██║██║   ██║╚════██║   ██║
+╚██████╔╝██║  ██║╚██████╔╝███████║   ██║
+ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝
+    </pre>
+    <div class="about-info">
+      <div><span class="k">Version</span><span class="v">6.6.6</span></div>
+      <div><span class="k">Codename</span><span class="v">Phantom</span></div>
+      <div><span class="k">Kernel</span><span class="v">ghost-6.6.6</span></div>
+      <div><span class="k">Shell</span><span class="v">ghostsh v1.0</span></div>
+      <div><span class="k">Arch</span><span class="v">x86_64</span></div>
+      <div><span class="k">Hack-Level</span><span class="v">MAXIMUM</span></div>
+    </div>
+  `;
+  return createWindow({
+    title: 'About Ghost OS', icon: 'ℹ', appId: 'about',
+    width: 500, height: 480, content: wrap
+  });
+}
+
+/* ---------- APP REGISTRY ---------- */
+const APPS = {
+  terminal: { name: 'Terminal', icon: '⌨', open: openTerminal },
+  files: { name: 'Files', icon: '📁', open: openFiles },
+  scan: { name: 'Scanner', icon: '📡', open: openScanner },
+  notes: { name: 'Notes', icon: '📝', open: openNotes },
+  settings: { name: 'Settings', icon: '⚙', open: openSettings },
+  about: { name: 'About', icon: 'ℹ', open: openAbout },
+};
+
+function openApp(id) {
+  if (openApps[id]) {
+    openApps[id].style.display = 'flex';
+    openApps[id].style.zIndex = ++windowZIndex;
+    updateTaskbar();
+    return;
+  }
+  const win = APPS[id].open();
+  openApps[id] = win;
+  updateTaskbar();
+}
+
+/* ---------- DESKTOP ICONS ---------- */
+function buildDesktopIcons() {
+  const wrap = document.getElementById('desktop-icons');
+  const icons = [
+    { id: 'terminal', emoji: '⌨' },
+    { id: 'files', emoji: '📁' },
+    { id: 'scan', emoji: '📡' },
+    { id: 'notes', emoji: '📝' },
+    { id: 'settings', emoji: '⚙' },
+    { id: 'about', emoji: 'ℹ' },
+  ];
+  wrap.innerHTML = icons.map(i => `
+    <div class="d-icon" data-app="${i.id}">
+      <span class="d-emoji">${i.emoji}</span>
+      <div class="d-label">${APPS[i.id].name}</div>
+    </div>
+  `).join('');
+  wrap.querySelectorAll('.d-icon').forEach(el => {
+    el.addEventListener('dblclick', () => openApp(el.dataset.app));
+    el.addEventListener('click', () => openApp(el.dataset.app));
+  });
+}
+
+/* ---------- BOOT / LOGIN ---------- */
+async function runBoot() {
+  const boot = document.getElementById('boot');
+  const lines = [
+    ['[    0.000000] GHOST BIOS v6.6.6 — initializing ...', 'dim'],
+    ['[    0.100000] CPU: Ghost Xeon @ 4.20GHz × 16 threads', 'dim'],
+    ['[    0.200000] Memory test: 16384MB ... OK', 'ok'],
+    ['[    0.300000] Detecting storage devices ...', 'dim'],
+    ['[    0.400000] /dev/ghost0 mounted at / (ext4)', 'ok'],
+    ['[    0.500000] Loading crypto modules ... OK', 'ok'],
+    ['[    0.600000] Initializing network stack ... OK', 'ok'],
+    ['[    0.700000] Starting ghostd (init) ... OK', 'ok'],
+    ['[    0.800000] Loading GHOST-OS kernel ...', 'info'],
+    ['[    0.900000] All systems nominal.', 'ok'],
+    ['', ''],
+    ['  ██████╗ ██╗  ██╗ ██████╗ ███████╗████████╗', 'ok'],
+    [' ██╔════╝ ██║  ██║██╔═══██╗██╔════╝╚══██╔══╝', 'ok'],
+    [' ██║  ███╗███████║██║   ██║███████╗   ██║   ', 'ok'],
+    [' ██║   ██║██╔══██║██║   ██║╚════██║   ██║   ', 'ok'],
+    [' ╚██████╔╝██║  ██║╚██████╔╝███████║   ██║   ', 'ok'],
+    ['  ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝   ', 'ok'],
+    ['', ''],
+    ['              version 6.6.6 — phantom', 'dim'],
+    ['', ''],
+  ];
+  for (const [text, cls] of lines) {
+    const div = document.createElement('div');
+    div.className = 'line ' + cls;
+    div.textContent = text;
+    boot.appendChild(div);
+    boot.scrollTop = boot.scrollHeight;
+    await sleep(70);
+  }
+  await sleep(500);
+  // fade to login
+  boot.style.transition = 'opacity .4s';
+  boot.style.opacity = '0';
+  setTimeout(() => {
+    boot.style.display = 'none';
+    document.getElementById('login').style.display = 'flex';
+  }, 400);
+  // wait for enter
+  const go = () => {
+    document.removeEventListener('keydown', go);
+    document.getElementById('login').style.display = 'none';
+    startDesktop();
+  };
+  document.addEventListener('keydown', go);
+  document.getElementById('login').addEventListener('click', go);
+}
+
+function startDesktop() {
+  document.getElementById('desktop').style.display = 'block';
+  buildDesktopIcons();
+  updateTaskbar();
+  // open terminal on first login
+  setTimeout(() => openApp('terminal'), 300);
+}
+
+/* ---------- GLOBAL EVENTS ---------- */
+document.getElementById('start-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  openStartMenu();
+});
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('start-menu');
+  if (!e.target.closest('#start-menu') && !e.target.closest('#start-btn')) {
+    menu.classList.remove('open');
+  }
+});
+window.addEventListener('keydown', (e) => {
+  // Ctrl+Alt+T opens terminal
+  if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 't') {
+    e.preventDefault();
+    if (document.getElementById('desktop').style.display !== 'none') openApp('terminal');
+  }
+});
+
+/* ---------- BOOT ---------- */
+runBoot();
+</script>
+</body>
+</html>
