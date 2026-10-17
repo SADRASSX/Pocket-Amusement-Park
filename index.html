@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>شهربازی جیبی</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;900&display=swap">
+<style>
+:root{--bg:#eef0ff;--ink:#1c1a3d;--s:80%;--l:91%;--bl:42%;--cell:rgba(255,255,255,.65);--bar:#1c1a3d;--bar-ink:#fff;
+  color-scheme:light;box-sizing:border-box;padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12102b;--ink:#eeeeff;--s:30%;--l:20%;--bl:50%;--cell:rgba(255,255,255,.1);--bar:#eeeeff;--bar-ink:#12102b;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12102b;--ink:#eeeeff;--s:30%;--l:20%;--bl:50%;--cell:rgba(255,255,255,.1);--bar:#eeeeff;--bar-ink:#12102b;color-scheme:dark}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Vazirmatn",Tahoma,sans-serif;line-height:1.7}
+:focus-visible{outline:3px solid hsl(340 90% 55%);outline-offset:2px}
+.top{position:sticky;top:0;z-index:5;background:var(--bar);color:var(--bar-ink);padding:calc(.5rem + env(safe-area-inset-top,0px)) 1.25rem .5rem;display:flex;justify-content:space-between;font-weight:500}
+header{text-align:center;padding:3rem 1rem 1.5rem}
+h1{font-weight:900;font-size:clamp(2.8rem,11vw,6.5rem);line-height:1.2;background:linear-gradient(90deg,#ff4d8d,#ffb02e,#2ec5ff,#8f5bff,#ff4d8d);background-size:300% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;animation:flow 8s linear infinite}
+@keyframes flow{to{background-position:-300% 0}}
+header p{max-width:32rem;margin:.5rem auto 0;opacity:.8}
+.grid{max-width:72rem;margin:auto;padding:1rem 1rem 3rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(16.5rem,1fr));gap:1rem}
+.card{background:hsl(var(--h) var(--s) var(--l));border-radius:1.4rem;padding:1.1rem;display:flex;flex-direction:column;gap:.6rem;align-items:center;text-align:center}
+.card:nth-child(3n){border-radius:.5rem 1.8rem 1.4rem 1.4rem}.card:nth-child(4n+1){border-radius:1.8rem .5rem 1.4rem 1.4rem}
+.card h2{font-size:1.1rem;font-weight:900;align-self:stretch;text-align:start}
+.wide{grid-column:span 2}@media(max-width:36rem){.wide{grid-column:auto}}
+button,.btn{font:inherit;font-weight:500;border:0;border-radius:999px;padding:.35rem 1.2rem;background:hsl(var(--h) 70% var(--bl));color:#fff;cursor:pointer}
+button:active{transform:scale(.95)}
+.big{font-size:3.2rem;line-height:1.2}.out{min-height:3rem;font-weight:500}
+input[type=range]{width:100%;accent-color:hsl(var(--h) 70% var(--bl))}
+.g{display:grid;gap:3px;width:100%;max-width:13rem}
+.g>*{aspect-ratio:1;border-radius:.4rem;border:0;background:var(--cell);padding:0;font-size:1.5rem;color:var(--ink)}
+.pal{display:flex;gap:.3rem}.pal button{width:1.6rem;height:1.6rem;padding:0;border:2px solid #fff}
+.keys{position:relative;display:flex;width:100%;height:8rem;direction:ltr}
+.wk{flex:1;height:100%;background:#fff;color:#444;border:1px solid #999;border-radius:0 0 .5rem .5rem;padding:0 0 .3rem;display:flex;align-items:flex-end;justify-content:center;font-size:.75rem}
+.wk.on{background:hsl(var(--h) 80% 80%)}
+.bk{position:absolute;top:0;width:7%;height:60%;background:#222;border:0;border-radius:0 0 .4rem .4rem;padding:0;z-index:1}
+.bk.on{background:hsl(var(--h) 60% 40%)}
+
+.bub{width:100%;display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.bub button{aspect-ratio:1;border-radius:50%;padding:0;background:radial-gradient(circle at 35% 30%,#fff,hsl(var(--h) 80% 70%));box-shadow:inset -2px -3px 6px rgba(0,0,0,.15)}
+.bub button.p{background:var(--cell);box-shadow:none;transform:scale(.7)}
+.rx{width:100%;height:6rem;border-radius:1rem;font-size:1.1rem;background:#555}
+.sw{width:100%;height:4.5rem;border-radius:1rem}
+.ball{width:7rem;height:7rem;border-radius:50%;background:radial-gradient(circle at 35% 30%,#555,#000 65%);color:#fff;display:grid;place-items:center;font-weight:900;padding:.7rem;font-size:.85rem;line-height:1.3}
+.ball.sh{animation:sh .5s}@keyframes sh{20%{transform:translate(-10px,4px) rotate(-12deg)}50%{transform:translate(10px,-4px) rotate(12deg)}80%{transform:translate(-6px,2px)}}
+.cookie.c{animation:cr .6s}@keyframes cr{40%{transform:scale(1.4) rotate(-20deg)}}
+.breath{width:5rem;height:5rem;border-radius:50%;background:hsl(var(--h) 70% 60%);animation:br 8s ease-in-out infinite alternate;margin:1.2rem 0}
+@keyframes br{to{transform:scale(1.8)}}
+.pl{font-size:4rem;line-height:1;transition:transform .3s}.pl.b{transform:scale(1.25)}
+.dif{display:inline-flex;align-items:center;gap:.3rem;margin-top:1rem;padding:.3rem;border-radius:999px;background:var(--cell);flex-wrap:wrap;justify-content:center}
+.dif span{padding:.2rem .8rem;font-weight:500}
+.dif button{background:none;color:var(--ink);padding:.3rem 1.2rem}
+.dif button[aria-pressed="true"]{background:var(--bar);color:var(--bar-ink)}
+.hint{font-size:.85rem;opacity:.7;margin-top:.4rem}
+.inp{width:100%;font:inherit;padding:.4rem 1rem;border-radius:999px;border:0;background:var(--cell);color:var(--ink);text-align:center}
+.ar{padding:0;height:2.4rem}
+@media (prefers-reduced-motion:reduce){h1,.breath{animation:none}}
+</style>
+</head>
+<body>
+<div class="top"><span>🎟️ امتیاز شما: <b id="score">۰</b></span><span>۲۴ بازی و ابزار</span></div>
+<header>
+  <h1>شهربازی جیبی</h1>
+  <p>بیست‌وچهار اسباب‌بازی کوچک در یک صفحه. هر کاری بکنید امتیاز می‌گیرید.</p>
+<div class="dif" role="group" aria-label="درجه سختی"><span>درجه سختی:</span><button type="button" data-d="0" aria-pressed="false">آسان</button><button type="button" data-d="1" aria-pressed="true">متوسط</button><button type="button" data-d="2" aria-pressed="false">سخت</button></div>
+<div class="hint">آسان: نصف امتیاز · متوسط: معمولی · سخت: دو برابر امتیاز</div>
+</header>
+<main class="grid">
+
+<section class="card" style="--h:330"><h2>حال‌سنج</h2>
+  <div class="big" id="face">🙂</div><input type="range" id="mood" min="0" max="4" value="3" aria-label="حال شما"><div class="out" id="moodt"></div></section>
+
+<section class="card" style="--h:30"><h2>امروز چی بخورم؟</h2>
+  <div class="big" id="food">🍽️</div><div class="out" id="foodt">بی‌تصمیمی؟ من تصمیم می‌گیرم.</div><button id="fb" type="button">بگو!</button></section>
+
+<section class="card" style="--h:260"><h2>پیانوی جیبی</h2>
+  <div class="keys" id="keys"></div><div class="out">با کلیک یا کیبورد: a تا k و کلیدهای w e t y u</div></section>
+
+<section class="card" style="--h:170"><h2>پلاستیک حباب‌دار</h2>
+  <div class="bub" id="bub"></div><div class="out">ترکانده: <b id="bc">۰</b></div></section>
+
+<section class="card" style="--h:120"><h2>گیاه من</h2>
+  <div class="pl" id="pl">🌱</div><div class="out" id="plt">تشنه است.</div><button id="wb" type="button">آب بده 💧</button></section>
+
+<section class="card" style="--h:0"><h2>تست سرعت واکنش</h2>
+  <button class="rx" id="rx" type="button">شروع</button><div class="out" id="rxt">رکورد: —</div></section>
+
+<section class="card" style="--h:48"><h2>کلوچه‌ی فال</h2>
+  <button class="cookie big" id="ck" type="button" style="background:none;padding:0" aria-label="باز کردن کلوچه">🥠</button><div class="out" id="ckt">روی کلوچه بزنید.</div></section>
+
+<section class="card" style="--h:200"><h2>رنگ‌ساز</h2>
+  <div class="sw" id="sw"></div>
+  <input type="range" id="r" max="255" value="255" aria-label="قرمز"><input type="range" id="g" max="255" value="120" aria-label="سبز"><input type="range" id="b" max="255" value="80" aria-label="آبی">
+  <div class="out" dir="ltr" id="hex"></div></section>
+
+<section class="card" style="--h:290"><h2>گوی جادویی</h2>
+  <div class="ball" id="ball">؟</div><button id="bb" type="button">یک سؤال در دلتان بپرسید و بزنید</button></section>
+
+<section class="card wide" style="--h:90"><h2>نقاشی پیکسلی</h2>
+  <div class="pal" id="pal"></div><div class="g" id="px" style="grid-template-columns:repeat(8,1fr)"></div><button id="pc" type="button">پاک کن</button></section>
+
+<section class="card" style="--h:15"><h2>حافظه‌ی جانوری <small id="mv"></small></h2>
+  <div class="g" id="mem" style="grid-template-columns:repeat(4,1fr)"></div><div class="out" id="memt"></div></section>
+
+<section class="card" style="--h:215"><h2>دوز با رایانه</h2>
+  <div class="g" id="ttt" style="grid-template-columns:repeat(3,1fr)"></div><div class="out" id="tt">شما ✕ هستید.</div><button id="tr" type="button">دوباره</button></section>
+
+<section class="card" style="--h:150"><h2>نفس عمیق</h2>
+  <div class="breath"></div><div class="out">با دایره نفس بکشید: بزرگ شد، بدهید بیرون.</div></section>
+<section class="card" style="--h:5"><h2>موش‌گیر</h2>
+  <div class="g" id="wh" style="grid-template-columns:repeat(3,1fr)"></div><div class="out" id="wht">۲۰ ثانیه فرصت دارید.</div><button id="whb" type="button">شروع</button></section>
+
+<section class="card" style="--h:60"><h2>سنگ، کاغذ، قیچی</h2>
+  <div class="big" id="rpv">🤖 ؟</div><div id="rpb" style="display:flex;gap:.5rem"></div><div class="out" id="rpt">انتخاب کنید.</div></section>
+
+<section class="card" style="--h:190"><h2>حدس عدد</h2><div class="out" id="gst">عددی بین ۱ تا ۱۰۰ در ذهن من است.</div>
+  <input type="number" id="gin" min="1" max="100" aria-label="حدس شما" style="width:100%;font:inherit;padding:.4rem 1rem;border-radius:999px;border:0;background:var(--cell);color:var(--ink)"><button id="gb" type="button">حدس بزن</button></section>
+
+<section class="card" style="--h:300"><h2>سایمون</h2>
+  <div class="g" id="sim" style="grid-template-columns:repeat(2,1fr);max-width:9rem"></div><div class="out" id="smt">دنباله را تکرار کنید.</div><button id="smb" type="button">شروع</button></section>
+
+<section class="card" style="--h:75"><h2>سکه و تاس</h2><div class="big" id="cd">🎲</div><div class="out" id="cdt"></div>
+  <div style="display:flex;gap:.5rem"><button id="cb" type="button">سکه</button><button id="db" type="button">تاس</button></div></section>
+
+<section class="card" style="--h:240"><h2>چند کلیک در ۵ ثانیه؟</h2>
+  <button class="rx" id="cpb" type="button" style="background:hsl(240 60% 50%)">شروع (بزنید)</button><div class="out" id="cpt">رکورد: —</div></section>
+<section class="card wide" style="--h:140"><h2>مار</h2>
+  <canvas id="snc" width="240" height="240" style="width:15rem;max-width:100%;border-radius:.8rem;background:var(--cell)"></canvas>
+  <div class="out" id="snt">با کلیدهای جهت‌دار کیبورد یا دکمه‌ها</div>
+  <div style="display:grid;grid-template-columns:repeat(3,2.8rem);gap:.2rem"><span></span><button class="ar" id="snu" type="button" aria-label="بالا">⬆️</button><span></span><button class="ar" id="snl" type="button" aria-label="چپ">⬅️</button><button class="ar" id="snd" type="button" aria-label="پایین">⬇️</button><button class="ar" id="snr" type="button" aria-label="راست">➡️</button></div>
+  <button id="snb" type="button">شروع</button></section>
+
+<section class="card" style="--h:20"><h2>ریاضی سریع</h2><div class="big" id="mq" dir="ltr">؟</div>
+  <input class="inp" type="number" id="ma" aria-label="جواب"><div class="out" id="mt">۳۰ ثانیه، هر چه بیشتر جواب بدهید.</div><button id="mb" type="button">شروع</button></section>
+
+<section class="card" style="--h:50"><h2>خاموش‌کن</h2><div class="g" id="lo" style="grid-template-columns:repeat(5,1fr)"></div>
+  <div class="out" id="lom"></div><button id="lob" type="button">بازی تازه</button></section>
+
+<section class="card" style="--h:280"><h2>کلمه‌ی درهم</h2><div class="big" id="wdv" style="font-size:2rem">؟</div>
+  <input class="inp" type="text" id="wdi" aria-label="کلمه"><div class="out" id="wdt"></div><button id="wdb" type="button">کلمه‌ی تازه</button></section>
+
+<section class="card" style="--h:330"><h2>رنگ را بگو</h2><div class="big" id="cw" style="font-weight:900">؟</div>
+  <div id="cbx" style="display:flex;gap:.4rem"></div><div class="out" id="cwt">رنگِ نوشته را بزنید، نه معنی کلمه را.</div></section>
+</main>
+
+<script>
+var $=function(i){return document.getElementById(i)},fa=function(n){return n.toLocaleString('fa-IR')};
+var R=function(a){return a[Math.floor(Math.random()*a.length)]};
+var dif=1,score=0;function pt(n){score+=Math.round(n*[.5,1,2][dif]);$('score').textContent=fa(score)}
+var AC;function tone(f,d){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=f;
+ g.gain.setValueAtTime(.25,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
+
+/* mood */
+var F=['😭','😕','😐','🙂','🤩'],FT=['امروز سخته. اشکالی ندارد.','کمی خسته‌اید.','معمولی.','حال خوبی دارید!','دنیا مال شماست!'];
+function mood(){var v=$('mood').value;$('face').textContent=F[v];$('moodt').textContent=FT[v]}mood();
+$('mood').addEventListener('input',function(){mood();pt(1)});
+
+/* food */
+var FD=[['🍕','پیتزا'],['🍜','آش رشته'],['🥙','ساندویچ فلافل'],['🍚','چلو کباب'],['🥗','سالاد'],['🍳','املت'],['🍔','برگر'],['🍲','قورمه‌سبزی'],['🥞','پنکیک']];
+$('fb').addEventListener('click',function(){var f=R(FD);$('food').textContent=f[0];$('foodt').textContent='امروز: '+f[1];pt(2)});
+
+/* piano */
+var WH=[[262,'دو','a'],[294,'ر','s'],[330,'می','d'],[349,'فا','f'],[392,'سل','g'],[440,'لا','h'],[494,'سی','j'],[523,'دو','k']],BK=[[277,0,'w'],[311,1,'e'],[370,3,'t'],[415,4,'y'],[466,5,'u']],KB={};
+function key(f,k,cls,st,lab){var b=document.createElement('button');b.className=cls;b.setAttribute('style',st);b.textContent=lab||'';b.setAttribute('aria-label','کلید پیانو');
+ function p(){tone(f,.9);pt(1);b.classList.add('on');setTimeout(function(){b.classList.remove('on')},150)}b.addEventListener('pointerdown',p);KB[k]=p;$('keys').appendChild(b)}
+WH.forEach(function(x){key(x[0],x[2],'wk','',x[1])});
+BK.forEach(function(x){key(x[0],x[2],'bk','left:'+((x[1]+1)*12.5-3.5)+'%')});
+document.addEventListener('keydown',function(e){if(e.repeat||e.target.tagName==='INPUT')return;var p=KB[e.key.toLowerCase()];if(p)p()});
+
+/* bubbles */
+var bc=0,bl;function bub(){$('bub').innerHTML='';bl=24;for(var i=0;i<24;i++){(function(){var b=document.createElement('button');b.setAttribute('aria-label','حباب');
+ b.addEventListener('click',function(){if(b.className)return;b.className='p';tone(500+Math.random()*500,.08);bc++;bl--;$('bc').textContent=fa(bc);pt(1);if(!bl)setTimeout(bub,600)});$('bub').appendChild(b)})()}}bub();
+
+/* plant */
+var w=0,PS=[[0,'🌱','تشنه است.'],[3,'🌿','دارد بزرگ می‌شود.'],[6,'🌳','درخت شده!'],[10,'🌳🍎','میوه داد! بچینید؟']];
+$('wb').addEventListener('click',function(){w++;if(w>10){w=0}var s=PS[0];PS.forEach(function(p){if(w>=p[0])s=p});
+ $('pl').textContent=s[1];$('plt').textContent=w?s[2]+' ('+fa(w)+')':'دوباره از اول.';$('pl').classList.add('b');setTimeout(function(){$('pl').classList.remove('b')},250);pt(1)});
+
+/* reaction */
+var st=0,t0,to,best=0,rt=[];
+$('rx').addEventListener('click',function(){var b=this;
+ if(st===0){st=1;b.textContent='صبر کنید…';b.style.background='#c0392b';to=setTimeout(function(){st=2;t0=performance.now();b.textContent='حالا بزن!';b.style.background='#1e9e55'},1000+Math.random()*2500)}
+ else if(st===1){clearTimeout(to);st=0;b.textContent='زود بود! دوباره';b.style.background='#555'}
+ else{var ms=Math.round(performance.now()-t0);st=0;if(!best||ms<best)best=ms;rt.push(ms);if(rt.length>5)rt.shift();var av=Math.round(rt.reduce(function(a,c){return a+c},0)/rt.length);$('rxt').textContent=fa(ms)+' ms · میانگین '+fa(rt.length)+' بار آخر: '+fa(av)+' · رکورد '+fa(best);b.textContent='دوباره';b.style.background='#555';pt(5)}});
+
+/* fortune */
+var FO=['به‌زودی خبر خوبی می‌شنوید.','امروز یک چای خوب سرنوشت را عوض می‌کند.','کسی دارد به شما فکر می‌کند.','کاری که عقب انداخته‌اید، از آنچه فکر می‌کنید ساده‌تر است.','سفری در راه است، شاید فقط تا آشپزخانه.','لبخند بزنید، دلیلش را بعداً پیدا می‌کنید.','یک ایده‌ی خوب نزدیک است، قدم بزنید.'];
+$('ck').addEventListener('click',function(){var c=this;c.classList.remove('c');void c.offsetWidth;c.classList.add('c');$('ckt').textContent='«'+R(FO)+'»';tone(180,.2);pt(2)});
+
+/* color mixer */
+function mix(){var r=+$('r').value,g=+$('g').value,b=+$('b').value,h='#'+[r,g,b].map(function(x){return x.toString(16).padStart(2,'0')}).join('');
+ $('sw').style.background=h;$('hex').textContent=h.toUpperCase()}mix();
+['r','g','b'].forEach(function(i){$(i).addEventListener('input',function(){mix();pt(1)})});
+
+/* 8-ball */
+var BA=['قطعاً بله','بعید است','شاید','دوباره بپرس','حتماً!','نه بابا','فعلاً صبر کن','به نظرم آره'];
+$('bb').addEventListener('click',function(){var b=$('ball');b.classList.remove('sh');void b.offsetWidth;b.classList.add('sh');b.textContent='…';setTimeout(function(){b.textContent=R(BA)},500);pt(2)});
+
+/* pixel art */
+var cols=['#ff4d8d','#ffb02e','#2ec56b','#2ea8ff','#8f5bff','#222222'],cur=cols[0];
+cols.forEach(function(c){var b=document.createElement('button');b.style.background=c;b.setAttribute('aria-label','رنگ');b.addEventListener('click',function(){cur=c});$('pal').appendChild(b)});
+for(var i=0;i<64;i++){var d=document.createElement('button');d.setAttribute('aria-label','پیکسل');
+ d.addEventListener('click',function(){this.style.background=cur;pt(1)});d.addEventListener('pointerenter',function(e){if(e.buttons===1&&e.pointerType==='mouse')this.style.background=cur});$('px').appendChild(d)}
+$('pc').addEventListener('click',function(){$('px').childNodes.forEach(function(x){x.style.background=''})});
+
+/* memory */
+var mo=[],lock=0,fd=0,mvn=0,lv=1,n=6;
+function mem(){n=[4,6,8][lv];var E=['🦊','🐙','🍉','🚀','🎸','🌵','🍄','🦋'].slice(0,n),dk=E.concat(E).sort(function(){return Math.random()-.5});$('mem').innerHTML='';mo=[];lock=0;fd=0;mvn=0;$('mv').textContent='';$('memt').textContent='مرحله '+fa(lv+1)+' از ۳';
+ dk.forEach(function(e){var b=document.createElement('button');b.textContent='❔';b.setAttribute('aria-label','کارت');
+  b.addEventListener('click',function(){if(lock||b.dataset.f||mo.indexOf(b)>-1)return;b.textContent=e;mo.push(b);
+   if(mo.length===2){mvn++;$('mv').textContent='('+fa(mvn)+' حرکت)';var a=mo[0];
+    if(a.textContent===e){a.dataset.f=b.dataset.f=1;mo=[];fd++;pt(3);tone(660,.2);if(fd===n){var last=lv===2;$('memt').textContent=last?'همه‌ی مرحله‌ها تمام شد! 🏆 از اول…':'مرحله تمام شد! 🎉';pt(10*(lv+1));lv=last?0:lv+1;setTimeout(mem,2000)}}
+    else{lock=1;setTimeout(function(){a.textContent=b.textContent='❔';mo=[];lock=0},700)}}});$('mem').appendChild(b)})}mem();
+
+/* tic tac toe */
+var L=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]],bd,ov;
+function wn(p){return L.some(function(l){return l.every(function(i){return bd[i]===p})})}
+function rd(){var c=$('ttt').childNodes;bd.forEach(function(v,i){c[i].textContent=v==='X'?'✕':v==='O'?'◯':''})}
+function mm(b,p){if(L.some(function(l){return l.every(function(i){return b[i]==='O'})}))return 1;
+ if(L.some(function(l){return l.every(function(i){return b[i]==='X'})}))return -1;
+ var e=[];b.forEach(function(v,i){if(!v)e.push(i)});if(!e.length)return 0;
+ var best=p==='O'?-2:2;e.forEach(function(k){b[k]=p;var s=mm(b,p==='O'?'X':'O');b[k]='';if(p==='O'?s>best:s<best)best=s});return best}
+function aiMove(){if(dif===0||(dif===1&&Math.random()<.5)){var em=[];bd.forEach(function(v,i){if(!v)em.push(i)});return R(em)}var bs=-2,m=0;bd.forEach(function(v,i){if(v)return;bd[i]='O';var s=mm(bd,'X');bd[i]='';if(s>bs){bs=s;m=i}});return m}
+function ttt(){bd=Array(9).fill('');ov=0;$('tt').textContent='شما ✕ هستید.';$('ttt').innerHTML='';
+ for(var i=0;i<9;i++)(function(i){var b=document.createElement('button');b.setAttribute('aria-label','خانه');b.addEventListener('click',function(){if(ov||bd[i])return;bd[i]='X';
+  if(wn('X')){ov=1;rd();$('tt').textContent='بردید! 🏆';pt(15);return}
+  var e=bd.map(function(v,k){return v?-1:k}).filter(function(k){return k>-1});if(!e.length){ov=1;rd();$('tt').textContent='مساوی!';pt(3);return}
+  var m=aiMove();
+  bd[m]='O';rd();if(wn('O')){ov=1;$('tt').textContent='رایانه برد 🤖'}else if(bd.every(Boolean)){ov=1;$('tt').textContent='مساوی!';pt(5)}});$('ttt').appendChild(b)})(i)}ttt();
+$('tr').addEventListener('click',ttt);
+
+/* whack-a-mole */
+var whT=0,whS=0,whI,whM=-1,whC;
+function whd(){$('wh').childNodes.forEach(function(b,i){b.textContent=i===whM?'🐹':''})}
+for(var wi=0;wi<9;wi++){(function(i){var b=document.createElement('button');b.setAttribute('aria-label','سوراخ');
+ b.addEventListener('click',function(){if(whT&&i===whM){whS++;pt(1);tone(700,.07);whM=-1;whd()}});$('wh').appendChild(b)})(wi)}
+$('whb').addEventListener('click',function(){if(whT)return;whT=20;whS=0;$('wht').textContent='امتیاز: ۰ · ۲۰ ثانیه';
+ whI=setInterval(function(){whM=Math.floor(Math.random()*9);whd()},[1000,700,450][dif]);
+ whC=setInterval(function(){whT--;$('wht').textContent='امتیاز: '+fa(whS)+' · '+fa(whT)+' ثانیه';
+  if(whT<=0){clearInterval(whI);clearInterval(whC);whM=-1;whd();whT=0;$('wht').textContent='تمام! '+fa(whS)+' موش گرفتید.';pt(whS)}},1000)});
+
+/* rock paper scissors */
+var RP=['🪨','📄','✂️'],rw=0,rl=0;
+RP.forEach(function(e,i){var b=document.createElement('button');b.textContent=e;b.style.fontSize='1.6rem';b.setAttribute('aria-label','انتخاب');
+ b.addEventListener('click',function(){var c=Math.floor(Math.random()*3),r=(i-c+3)%3;$('rpv').textContent='🤖 '+RP[c];
+  if(r===0)$('rpt').textContent='مساوی. '+fa(rw)+' برد، '+fa(rl)+' باخت';
+  else if(r===1){rw++;pt(3);$('rpt').textContent='بردید! '+fa(rw)+' برد، '+fa(rl)+' باخت'}
+  else{rl++;$('rpt').textContent='باختید. '+fa(rw)+' برد، '+fa(rl)+' باخت'}});$('rpb').appendChild(b)});
+
+/* number guess */
+var gn=1+Math.floor(Math.random()*100),gc=0;function GM(){return[20,100,500][dif]}
+function guess(){var v=+$('gin').value;if(!v)return;gc++;var t=$('gst');
+ if(v===gn){t.textContent='درست بود! در '+fa(gc)+' حدس. عدد جدید ساخته شد.';pt(Math.max(5,20-gc));gn=1+Math.floor(Math.random()*GM());gc=0}
+ else t.textContent=(v<gn?'بالاتر برو ⬆️':'پایین‌تر بیا ⬇️')+' (حدس '+fa(gc)+')';
+ $('gin').value=''}
+$('gb').addEventListener('click',guess);$('gin').addEventListener('keydown',function(e){if(e.key==='Enter')guess()});
+
+/* simon */
+var SC=['#e74c3c','#f1c40f','#2ecc71','#3498db'],SF=[262,330,392,523],sq=[],si=0,sp=false;
+function flash(i){var b=$('sim').childNodes[i];b.style.opacity=1;tone(SF[i],.3);setTimeout(function(){b.style.opacity=.55},300)}
+function nxt(){sq.push(Math.floor(Math.random()*4));si=0;sp=false;$('smt').textContent='نگاه کنید…';var k=0;
+ var t=setInterval(function(){flash(sq[k]);k++;if(k>=sq.length){clearInterval(t);sp=true;$('smt').textContent='نوبت شماست ('+fa(sq.length)+')'}},[900,650,400][dif])}
+SC.forEach(function(c,i){var b=document.createElement('button');b.style.background=c;b.style.opacity=.55;b.setAttribute('aria-label','پد');
+ b.addEventListener('click',function(){if(!sp)return;flash(i);
+  if(i!==sq[si]){sp=false;$('smt').textContent='اشتباه! به مرحله‌ی '+fa(sq.length)+' رسیدید.';return}
+  si++;if(si===sq.length){sp=false;pt(sq.length*2);setTimeout(nxt,700)}});$('sim').appendChild(b)});
+$('smb').addEventListener('click',function(){sq=[];nxt()});
+
+/* coin and dice */
+$('cb').addEventListener('click',function(){var h=Math.random()<.5;$('cd').textContent=h?'👑':'🪙';$('cdt').textContent=h?'شیر':'خط';tone(900,.1);pt(1)});
+$('db').addEventListener('click',function(){var d=1+Math.floor(Math.random()*6);$('cd').textContent=['⚀','⚁','⚂','⚃','⚄','⚅'][d-1];$('cdt').textContent=fa(d);tone(200,.15);pt(1)});
+
+/* click speed */
+var cpn=0,cpA=false,cpB=0;
+$('cpb').addEventListener('click',function(){var b=this;
+ if(!cpA){cpA=true;cpn=1;b.textContent=fa(1);setTimeout(function(){cpA=false;if(cpn>cpB)cpB=cpn;b.textContent='دوباره';$('cpt').textContent=fa(cpn)+' کلیک · '+fa(cpn/5)+' در ثانیه · رکورد '+fa(cpB);pt(Math.round(cpn/3))},5000)}
+ else{cpn++;b.textContent=fa(cpn)}});
+
+/* snake */
+var sk=[],sdr=[1,0],sfd=[0,0],sT,sOn=false;
+function snFood(){do{sfd=[Math.floor(Math.random()*12),Math.floor(Math.random()*12)]}while(sk.some(function(c){return c[0]===sfd[0]&&c[1]===sfd[1]}))}
+function snDraw(){var c=$('snc').getContext('2d');c.clearRect(0,0,240,240);c.font='18px serif';c.fillText('🍎',sfd[0]*20,sfd[1]*20+17);
+ sk.forEach(function(p,i){c.fillStyle=i?'#2ec56b':'#1e8e4a';c.fillRect(p[0]*20+1,p[1]*20+1,18,18)})}
+function snStep(){var h=[sk[0][0]+sdr[0],sk[0][1]+sdr[1]];
+ if(h[0]<0||h[1]<0||h[0]>11||h[1]>11||sk.some(function(c){return c[0]===h[0]&&c[1]===h[1]})){clearInterval(sT);sOn=false;$('snt').textContent='باختید! طول مار: '+fa(sk.length);pt(sk.length-3);return}
+ sk.unshift(h);if(h[0]===sfd[0]&&h[1]===sfd[1]){pt(2);tone(600,.08);snFood();$('snt').textContent='طول: '+fa(sk.length)}else sk.pop();snDraw()}
+function snDir(x,y){if(sOn&&!(x===-sdr[0]&&y===-sdr[1]))sdr=[x,y]}
+$('snb').addEventListener('click',function(){sk=[[5,6],[4,6],[3,6]];sdr=[1,0];snFood();sOn=true;$('snt').textContent='طول: ۳';clearInterval(sT);sT=setInterval(snStep,[180,130,85][dif]);snDraw()});
+$('snu').addEventListener('click',function(){snDir(0,-1)});$('snd').addEventListener('click',function(){snDir(0,1)});
+$('snl').addEventListener('click',function(){snDir(-1,0)});$('snr').addEventListener('click',function(){snDir(1,0)});
+document.addEventListener('keydown',function(e){var m={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]}[e.key];if(m&&sOn){e.preventDefault();snDir(m[0],m[1])}});
+
+/* quick math */
+var mT=0,mS=0,mAns=0,mI;
+function mNew(){var r=[9,20,50][dif],o=dif===2?R(['+','-','×']):R(['+','-']),a=1+Math.floor(Math.random()*r),b=1+Math.floor(Math.random()*r);
+ if(o==='×'){a=2+Math.floor(Math.random()*11);b=2+Math.floor(Math.random()*11)}
+ if(o==='-'&&b>a){var t=a;a=b;b=t}mAns=o==='+'?a+b:o==='-'?a-b:a*b;$('mq').textContent=a+' '+o+' '+b}
+function mCheck(){if(!mT)return;var v=$('ma').value;if(v==='')return;if(+v===mAns){mS++;pt(1);tone(660,.08)}$('ma').value='';mNew()}
+$('mb').addEventListener('click',function(){if(mT)return;mT=30;mS=0;mNew();$('ma').focus();$('mt').textContent='درست: ۰ · ۳۰ ثانیه';
+ mI=setInterval(function(){mT--;$('mt').textContent='درست: '+fa(mS)+' · '+fa(mT)+' ثانیه';if(mT<=0){clearInterval(mI);mT=0;$('mq').textContent='؟';$('mt').textContent='تمام! '+fa(mS)+' جواب درست.';pt(mS)}},1000)});
+$('ma').addEventListener('keydown',function(e){if(e.key==='Enter')mCheck()});
+
+/* lights out */
+var lb=[],lmv=0;
+function loT(i){var r=Math.floor(i/5),c=i%5;[[0,0],[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){var y=r+d[0],x=c+d[1];if(y>=0&&y<5&&x>=0&&x<5)lb[y*5+x]=!lb[y*5+x]})}
+function loR(){$('lo').childNodes.forEach(function(b,i){b.textContent=lb[i]?'💡':'';b.style.background=lb[i]?'#ffd54a':''})}
+function loNew(){lb=Array(25).fill(false);lmv=0;for(var k=0;k<[3,8,15][dif];k++)loT(Math.floor(Math.random()*25));if(!lb.some(Boolean))loT(12);$('lom').textContent='همه‌ی چراغ‌ها را خاموش کنید.';loR()}
+for(var li=0;li<25;li++){(function(i){var b=document.createElement('button');b.setAttribute('aria-label','چراغ');
+ b.addEventListener('click',function(){if(!lb.some(Boolean))return;loT(i);lmv++;tone(300+i*10,.06);loR();
+  if(!lb.some(Boolean)){$('lom').textContent='خاموش شد در '+fa(lmv)+' حرکت! 🎉';pt(10);setTimeout(loNew,2500)}});$('lo').appendChild(b)})(li)}
+$('lob').addEventListener('click',loNew);loNew();
+
+/* word scramble */
+var WD={0:['کتاب','دریا','ماهی','نمک','شیر','مداد'],1:['پرنده','آسمان','ستاره','باران','گلدان'],2:['خورشید','دوچرخه','کوهستان','موسیقی','کتابخانه','رستوران']},wdw='';
+function wdNew(){var w=R(WD[dif]),a;do{a=w.split('');a.sort(function(){return Math.random()-.5})}while(a.join('')===w);wdw=w;$('wdv').textContent=a.join(' ');$('wdt').textContent='حروف را مرتب کنید و بنویسید.';$('wdi').value=''}
+function wdCheck(){var v=$('wdi').value.trim();if(!v)return;if(v===wdw){$('wdt').textContent='آفرین! «'+wdw+'» ✔️';pt(5);setTimeout(wdNew,1500)}else $('wdt').textContent='نه، دوباره امتحان کنید.'}
+$('wdb').addEventListener('click',wdNew);$('wdi').addEventListener('keydown',function(e){if(e.key==='Enter')wdCheck()});wdNew();
+
+/* color words */
+var CL=[['قرمز','#e74c3c'],['آبی','#3498db'],['سبز','#2ecc71'],['زرد','#f1c40f']],cwI=0,cwS=0;
+function cwNew(){var a=R(CL),b=(dif===0||(dif===1&&Math.random()<.5))?a:R(CL);cwI=CL.indexOf(b);$('cw').textContent=a[0];$('cw').style.color=b[1]}
+CL.forEach(function(c,i){var b=document.createElement('button');b.style.background=c[1];b.style.width='2.6rem';b.style.height='2.6rem';b.style.padding='0';b.setAttribute('aria-label',c[0]);
+ b.addEventListener('click',function(){if(i===cwI){cwS++;pt(1);tone(660,.06);$('cwt').textContent='درست پشت‌سرهم: '+fa(cwS)}else{cwS=0;$('cwt').textContent='اشتباه! از اول.'}cwNew()});$('cbx').appendChild(b)});cwNew();
+
+document.querySelectorAll('.dif button').forEach(function(b){b.addEventListener('click',function(){loNew();wdNew();cwNew();clearInterval(sT);sOn=false;$('snt').textContent='با کلیدهای جهت‌دار کیبورد یا دکمه‌ها'})});
+
+/* difficulty */
+document.querySelectorAll('.dif button').forEach(function(b){b.addEventListener('click',function(){
+ dif=+b.dataset.d;document.querySelectorAll('.dif button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});
+ lv=dif;mem();ttt();gn=1+Math.floor(Math.random()*GM());gc=0;$('gst').textContent='عددی بین ۱ تا '+fa(GM())+' در ذهن من است.';
+ sq=[];sp=false;$('smt').textContent='دنباله را تکرار کنید.'})});
+</script>
+</body>
+</html>
